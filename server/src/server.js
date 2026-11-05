@@ -120,3 +120,11 @@ app.get('/api/pickups',auth,(req,res)=>{
  ${req.user.role==='resident'?'WHERE h.user_id=?':req.user.role==='driver'?'WHERE p.driver_id=?':''} ORDER BY p.updated_at DESC`;
  res.json(req.user.role==='resident'?db.prepare(q).all(req.user.id):req.user.role==='driver'?db.prepare(q).all(req.user.id):db.prepare(q).all());
 });
+app.get('/api/notifications',auth,(req,res)=>res.json(db.prepare('SELECT * FROM notifications WHERE user_id=? ORDER BY id DESC LIMIT 100').all(req.user.id)));
+app.patch('/api/notifications/:id/read',auth,(req,res)=>{db.prepare('UPDATE notifications SET read=1 WHERE id=? AND user_id=?').run(req.params.id,req.user.id);res.json({ok:true})});
+app.get('/api/messages/:userId',auth,role('admin','driver'),(req,res)=>{
+ const other=Number(req.params.userId);
+ const peer=db.prepare('SELECT id,role FROM users WHERE id=?').get(other);
+ if(!peer||!((req.user.role==='admin'&&peer.role==='driver')||(req.user.role==='driver'&&peer.role==='admin')))return res.status(403).json({error:'Chat is limited to municipal admin and official drivers.'});
+ res.json(db.prepare('SELECT m.*,s.name AS sender_name FROM messages m JOIN users s ON s.id=m.sender_id WHERE (sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?) ORDER BY m.id').all(req.user.id,other,other,req.user.id));
+});
