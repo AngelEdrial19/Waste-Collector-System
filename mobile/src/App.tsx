@@ -91,4 +91,14 @@ export default function App(){
  const saveProfile=()=>run(async()=>{const u=await api<User>('/me','PATCH',{name:profileName,phone});setUser(u)},'Profile updated.');
  const openChat=async(id:number)=>{setChatTarget(id);try{setChat(await api<any[]>(`/messages/${id}`))}catch(e:any){Alert.alert('Chat',e.message)}};
  const sendChat=()=>{if(chatTarget===null||!chatText.trim())return;run(async()=>{await api('/messages','POST',{receiverId:chatTarget,message:chatText});setChatText('');setChat(await api<any[]>(`/messages/${chatTarget}`))})};
+ if(boot)return <View style={s.center}><ActivityIndicator size="large" color={C.forest}/><Text style={s.muted}>Preparing Waste Collector...</Text></View>;
+ if(!user)return <AuthScreen
+  showRegister={showRegister} busy={busy} error={error} loginErrors={loginErrors} registerErrors={registerErrors}
+  email={email} password={password} regName={regName} regPhone={regPhone} regEmail={regEmail} regPassword={regPassword}
+  regHousehold={regHousehold} regAddress={regAddress} regLat={regLat} regLng={regLng} regPhotoUri={regPhotoUri}
+  setEmail={v=>{setEmail(v);setLoginErrors(p=>({...p,email:''}))}} setPassword={v=>{setPassword(v);setLoginErrors(p=>({...p,password:''}))}}
+  setRegName={setRegName} setRegPhone={setRegPhone} setRegEmail={setRegEmail} setRegPassword={setRegPassword}
+  setRegHousehold={setRegHousehold} setRegAddress={setRegAddress} setRegLat={setRegLat} setRegLng={setRegLng}
+  onLogin={login} onRegister={register} onSwitch={()=>{setShowRegister(v=>!v);setError('');setLoginErrors({});setRegisterErrors({})}} onChoosePhoto={chooseRegPhoto}
+ />;
 }
