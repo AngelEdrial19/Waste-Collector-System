@@ -1,0 +1,21 @@
+WASTE COLLECTOR SYSTEM - EXPO SDK 54
+
+1) Extract this ZIP to a NEW folder (do not merge with an old project).
+2) Open the extracted folder in VS Code.
+3) Start the API in Terminal 1:
+   cd server
+   npm install
+   npm run dev
+4) Start the mobile app in Terminal 2:
+   cd mobile
+   npm install
+   npx expo install --fix
+   npx expo start --clear
+5) Scan the NEW QR code with Expo Go.
+
+IMPORTANT:
+- This project is configured for Expo SDK 54.
+- mobile/.env points to http://10.0.54.116:4000/api. Change the IP if your PC's LAN IP changes.
+- Phone and PC must be on the same Wi-Fi for LAN mode; allow Node.js through Windows Firewall.
+- In-app notifications are fetched from the API. This project does not import expo-notifications or request remote push permissions. Remote push requires a development build, not Expo Go.
+- Demo accounts are listed in README.md.
