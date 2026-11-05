@@ -25,3 +25,19 @@ app.post('/api/uploads/house-photo',auth,role('resident'),(req,res)=>{
   res.status(201).json({photoUrl:`${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`});
  });
 });
+app.post('/api/auth/register',(req,res)=>{
+ const {name,email,password,phone,address,latitude,longitude,householdName,photoUrl}=req.body;
+ if(!name?.trim()||!email?.trim()||!password||password.length<8||!householdName?.trim()||!address?.trim())
+  return res.status(400).json({error:'Name, valid email, password (8+ characters), household name and address are required.'});
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))return res.status(400).json({error:'Please provide a valid email address.'});
+ if(!Number.isFinite(Number(latitude))||!Number.isFinite(Number(longitude))||Number(latitude)<-90||Number(latitude)>90||Number(longitude)<-180||Number(longitude)>180)
+  return res.status(400).json({error:'Valid household map coordinates are required.'});
+ try{
+  const info=db.prepare('INSERT INTO users(name,email,password,role,phone) VALUES(?,?,?,?,?)').run(name,email.toLowerCase(),bcrypt.hashSync(password,10),'resident',phone||'');
+  db.prepare('INSERT INTO households(user_id,household_name,address,latitude,longitude,photo_url) VALUES(?,?,?,?,?,?)')
+   .run(info.lastInsertRowid,householdName.trim(),address.trim(),Number(latitude),Number(longitude),photoUrl||'');
+  const user=db.prepare('SELECT * FROM users WHERE id=?').get(info.lastInsertRowid);
+  const token=jwt.sign({id:user.id,role:user.role,name:user.name},SECRET,{expiresIn:'7d'});
+  res.status(201).json({token,user:safe(user)});
+ }catch(e){res.status(409).json({error:'Email is already registered.'})}
+});
