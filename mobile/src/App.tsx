@@ -34,4 +34,15 @@ export default function App(){
  useEffect(()=>{(async()=>{await loadToken();try{const me=await api<User>('/me');setUser(me);setProfileName(me.name);setPhone(me.phone||'')}catch{}setBoot(false)})()},[]);
  useEffect(()=>{if(!user)return;refresh();const t=setInterval(refresh,7000);return()=>clearInterval(t)},[user,refresh]);
  useEffect(()=>{if(!user||chatTarget===null)return;let active=true;const loadMessages=async()=>{try{const rows=await api<any[]>(`/messages/${chatTarget}`);if(active)setChat(rows)}catch{}};loadMessages();const timer=setInterval(loadMessages,3000);return()=>{active=false;clearInterval(timer)}},[user,chatTarget]);
+ const run=async(fn:()=>Promise<any>,success?:string)=>{try{await fn();if(success)Alert.alert('Success',success);await refresh()}catch(e:any){Alert.alert('Unable to complete',e.message)}};
+ const login=async()=>{
+  const errors:Record<string,string>={};
+  if(!email.trim())errors.email='Please enter your email address.';
+  else if(!FormValidator.email(email))errors.email='Enter a valid email address.';
+  if(!password)errors.password='Please enter your password.';
+  setLoginErrors(errors);if(Object.keys(errors).length)return;
+  setBusy(true);setError('');
+  try{const r=await api<any>('/auth/login','POST',{email:email.trim().toLowerCase(),password});await setToken(r.token);setUser(r.user);setProfileName(r.user.name);setPhone(r.user.phone||'');setTab('Home')}
+  catch(e:any){setError(e.message)}finally{setBusy(false)}
+ };
 }
