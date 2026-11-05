@@ -54,3 +54,8 @@ app.patch('/api/me',auth,(req,res)=>{
  .run(name??null,phone??null,available===undefined?null:(available?1:0),req.user.id);
  res.json(safe(db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id)));
 });
+app.get('/api/drivers',auth,role('admin'),(req,res)=>res.json(db.prepare("SELECT id,name,email,phone,available FROM users WHERE role='driver' ORDER BY name").all().map(u=>({...u,available:!!u.available}))));
+app.get('/api/households',auth,(req,res)=>{
+ const rows=db.prepare(`SELECT h.*,u.name AS resident_name,u.phone,(SELECT p.status FROM pickups p WHERE p.household_id=h.id ORDER BY p.id DESC LIMIT 1) AS pickup_status FROM households h JOIN users u ON u.id=h.user_id ORDER BY h.id`).all();
+ res.json(rows);
+});
