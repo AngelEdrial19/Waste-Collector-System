@@ -86,3 +86,13 @@ app.put('/api/schedules/:id',auth,role('admin'),(req,res)=>{
  for(const u of db.prepare("SELECT id FROM users WHERE role IN ('driver','resident')").all())notify(u.id,'Schedule updated',`${title} — ${area}, ${collectionDate} at ${startTime}`,'schedule');
  res.json(db.prepare('SELECT * FROM schedules WHERE id=?').get(req.params.id));
 });
+app.delete('/api/schedules/:id',auth,role('admin'),(req,res)=>{
+ db.prepare('DELETE FROM schedules WHERE id=?').run(req.params.id);
+ res.json({ok:true});
+});
+app.post('/api/assignments/:scheduleId/accept',auth,role('driver'),(req,res)=>{
+ const sid=Number(req.params.scheduleId);
+ db.prepare('INSERT INTO assignments(schedule_id,driver_id,status) VALUES(?,?,?) ON CONFLICT(schedule_id,driver_id) DO UPDATE SET status=excluded.status').run(sid,req.user.id,'accepted');
+ notify(db.prepare("SELECT id FROM users WHERE role='admin'").get().id,'Driver accepted schedule',`${req.user.name} accepted a collection assignment.`,'assignment');
+ res.json({ok:true,status:'accepted'});
+});
