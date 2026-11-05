@@ -45,4 +45,24 @@ export default function App(){
   try{const r=await api<any>('/auth/login','POST',{email:email.trim().toLowerCase(),password});await setToken(r.token);setUser(r.user);setProfileName(r.user.name);setPhone(r.user.phone||'');setTab('Home')}
   catch(e:any){setError(e.message)}finally{setBusy(false)}
  };
+ const register=async()=>{
+  const errors:Record<string,string>={};
+  const required:{[k:string]:string}={name:regName,email:regEmail,password:regPassword,household:regHousehold,address:regAddress};
+  Object.entries(required).forEach(([k,v])=>{if(!v.trim())errors[k]='This field is required.'});
+  if(regEmail.trim()&&!FormValidator.email(regEmail))errors.email='Enter a valid email address.';
+  if(regPassword&&!FormValidator.password(regPassword))errors.password='Use at least 8 characters.';
+  if(!FormValidator.coordinates(regLat,regLng))errors.coordinates='Enter valid latitude and longitude.';
+  setRegisterErrors(errors);if(Object.keys(errors).length)return;
+  setBusy(true);setError('');
+  try{
+   let uploadedPhoto='';
+   const r=await api<any>('/auth/register','POST',{
+    name:regName.trim(),email:regEmail.trim().toLowerCase(),password:regPassword,phone:regPhone.trim(),
+    householdName:regHousehold.trim(),address:regAddress.trim(),latitude:Number(regLat),longitude:Number(regLng),photoUrl:''
+   });
+   await setToken(r.token);setUser(r.user);setProfileName(r.user.name);setPhone(r.user.phone||'');setTab('Home');setShowRegister(false);
+   if(regPhotoUri){try{uploadedPhoto=await uploadPhoto(regPhotoUri);await api('/households','POST',{householdName:regHousehold.trim(),address:regAddress.trim(),latitude:Number(regLat),longitude:Number(regLng),photoUrl:uploadedPhoto});}catch(photoError:any){Alert.alert('Account created','Your account is ready, but the house photo could not upload: '+photoError.message);return;}}
+   Alert.alert('Account created','Your resident account and household map location have been registered.');
+  }catch(e:any){setError(e.message)}finally{setBusy(false)}
+ };
 }
