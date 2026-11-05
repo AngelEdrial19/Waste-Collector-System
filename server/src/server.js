@@ -59,3 +59,11 @@ app.get('/api/households',auth,(req,res)=>{
  const rows=db.prepare(`SELECT h.*,u.name AS resident_name,u.phone,(SELECT p.status FROM pickups p WHERE p.household_id=h.id ORDER BY p.id DESC LIMIT 1) AS pickup_status FROM households h JOIN users u ON u.id=h.user_id ORDER BY h.id`).all();
  res.json(rows);
 });
+app.post('/api/households',auth,role('resident'),(req,res)=>{
+ const {householdName,address,latitude,longitude,photoUrl}=req.body;
+ if(!householdName||!address||!Number.isFinite(Number(latitude))||!Number.isFinite(Number(longitude)))return res.status(400).json({error:'Household name, address and map coordinates are required.'});
+ const old=db.prepare('SELECT id FROM households WHERE user_id=?').get(req.user.id);
+ if(old) db.prepare('UPDATE households SET household_name=?,address=?,latitude=?,longitude=?,photo_url=? WHERE id=?').run(householdName,address,latitude,longitude,photoUrl||'',old.id);
+ else db.prepare('INSERT INTO households(user_id,household_name,address,latitude,longitude,photo_url) VALUES(?,?,?,?,?,?)').run(req.user.id,householdName,address,latitude,longitude,photoUrl||'');
+ res.json(db.prepare('SELECT * FROM households WHERE user_id=?').get(req.user.id));
+});
