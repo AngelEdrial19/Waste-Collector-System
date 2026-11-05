@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Waste Collector",
+    "slug": "waste-collector",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "sdkVersion": "54.0.0",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Waste Collector to select a photo of your household.",
+          "cameraPermission": "Allow Waste Collector to take a photo of your household."
+        }
+      ]
+    ],
+    "android": {
+      "package": "com.wastecollector.mobile",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}
