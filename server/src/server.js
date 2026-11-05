@@ -78,3 +78,11 @@ app.post('/api/schedules',auth,role('admin'),(req,res)=>{
  for(const r of residents)notify(r.id,'Collection scheduled',`${title} in ${area} on ${collectionDate} at ${startTime}. Prepare your waste.`,'schedule');
  res.status(201).json(db.prepare('SELECT * FROM schedules WHERE id=?').get(x.lastInsertRowid));
 });
+app.put('/api/schedules/:id',auth,role('admin'),(req,res)=>{
+ const {title,area,collectionDate,startTime,notes,status}=req.body;
+ const x=db.prepare('UPDATE schedules SET title=?,area=?,collection_date=?,start_time=?,notes=?,status=? WHERE id=?')
+ .run(title,area,collectionDate,startTime,notes||'',status||'published',req.params.id);
+ if(!x.changes)return res.status(404).json({error:'Schedule not found.'});
+ for(const u of db.prepare("SELECT id FROM users WHERE role IN ('driver','resident')").all())notify(u.id,'Schedule updated',`${title} — ${area}, ${collectionDate} at ${startTime}`,'schedule');
+ res.json(db.prepare('SELECT * FROM schedules WHERE id=?').get(req.params.id));
+});
