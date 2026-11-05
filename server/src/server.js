@@ -67,3 +67,14 @@ app.post('/api/households',auth,role('resident'),(req,res)=>{
  else db.prepare('INSERT INTO households(user_id,household_name,address,latitude,longitude,photo_url) VALUES(?,?,?,?,?,?)').run(req.user.id,householdName,address,latitude,longitude,photoUrl||'');
  res.json(db.prepare('SELECT * FROM households WHERE user_id=?').get(req.user.id));
 });
+app.get('/api/schedules',auth,(req,res)=>res.json(db.prepare('SELECT s.*,u.name AS admin_name FROM schedules s LEFT JOIN users u ON u.id=s.created_by ORDER BY collection_date DESC,id DESC').all()));
+app.post('/api/schedules',auth,role('admin'),(req,res)=>{
+ const {title,area,collectionDate,startTime,notes}=req.body;
+ if(!title||!area||!collectionDate||!startTime)return res.status(400).json({error:'Title, area, date and time are required.'});
+ const x=db.prepare('INSERT INTO schedules(title,area,collection_date,start_time,notes,created_by) VALUES(?,?,?,?,?,?)').run(title,area,collectionDate,startTime,notes||'',req.user.id);
+ const drivers=db.prepare("SELECT id FROM users WHERE role='driver'").all();
+ const residents=db.prepare("SELECT id FROM users WHERE role='resident'").all();
+ for(const d of drivers)notify(d.id,'New collection schedule',`${title} — ${area}, ${collectionDate} at ${startTime}`,'schedule');
+ for(const r of residents)notify(r.id,'Collection scheduled',`${title} in ${area} on ${collectionDate} at ${startTime}. Prepare your waste.`,'schedule');
+ res.status(201).json(db.prepare('SELECT * FROM schedules WHERE id=?').get(x.lastInsertRowid));
+});
