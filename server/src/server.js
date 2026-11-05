@@ -104,3 +104,19 @@ app.get('/api/assignments',auth,role('admin','driver'),(req,res)=>{
  const q=`SELECT a.*,s.title,s.area,s.collection_date,s.start_time,u.name AS driver_name FROM assignments a JOIN schedules s ON s.id=a.schedule_id JOIN users u ON u.id=a.driver_id ${req.user.role==='driver'?'WHERE a.driver_id=?':''} ORDER BY a.id DESC`;
  res.json(req.user.role==='driver'?db.prepare(q).all(req.user.id):db.prepare(q).all());
 });
+app.post('/api/pickups',(req,res,next)=>auth(req,res,()=>role('driver')(req,res,next)),(req,res)=>{
+ const {scheduleId,householdId,status,note}=req.body;
+ if(!['picked_up','not_picked_up'].includes(status))return res.status(400).json({error:'Invalid pickup status.'});
+ db.prepare(`INSERT INTO pickups(schedule_id,household_id,driver_id,status,note) VALUES(?,?,?,?,?)
+ ON CONFLICT(schedule_id,household_id) DO UPDATE SET driver_id=excluded.driver_id,status=excluded.status,note=excluded.note,updated_at=CURRENT_TIMESTAMP`)
+ .run(scheduleId,householdId,req.user.id,status,note||'');
+ const h=db.prepare('SELECT user_id,household_name FROM households WHERE id=?').get(householdId);
+ if(h)notify(h.user_id,status==='picked_up'?'Waste picked up':'Waste not picked up',status==='picked_up'?`Your household (${h.household_name}) has been collected.`:`Your household (${h.household_name}) was not collected. Please check the next schedule or contact the municipality.`,status==='picked_up'?'success':'warning');
+ res.json({ok:true,status});
+});
+app.get('/api/pickups',auth,(req,res)=>{
+ const q=`SELECT p.*,h.household_name,h.address,h.latitude,h.longitude,h.photo_url,u.name AS resident_name
+ FROM pickups p JOIN households h ON h.id=p.household_id JOIN users u ON u.id=h.user_id
+ ${req.user.role==='resident'?'WHERE h.user_id=?':req.user.role==='driver'?'WHERE p.driver_id=?':''} ORDER BY p.updated_at DESC`;
+ res.json(req.user.role==='resident'?db.prepare(q).all(req.user.id):req.user.role==='driver'?db.prepare(q).all(req.user.id):db.prepare(q).all());
+});
