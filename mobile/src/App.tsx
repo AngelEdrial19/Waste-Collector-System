@@ -17,4 +17,7 @@ import type {User,Schedule,Household,Notice} from './src/types';
 export default function App(){
     const [user,setUser]=useState<User|null>(null),[boot,setBoot]=useState(true),[tab,setTab]=useState('Home'),[busy,setBusy]=useState(false),[error,setError]=useState('');
     const [email,setEmail]=useState(''),[password,setPassword]=useState('');
+    const [loginErrors,setLoginErrors]=useState<Record<string,string>>({}),[registerErrors,setRegisterErrors]=useState<Record<string,string>>({});
+ const [showRegister,setShowRegister]=useState(false),[regName,setRegName]=useState(''),[regPhone,setRegPhone]=useState('');
+ const [regEmail,setRegEmail]=useState(''),[regPassword,setRegPassword]=useState(''),[regHousehold,setRegHousehold]=useState('');
 }
