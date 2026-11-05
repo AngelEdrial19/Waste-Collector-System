@@ -31,4 +31,7 @@ export default function App(){
   if(user.role==='admin'){const [d,st]=await Promise.all([api<any[]>('/drivers'),api<any>('/dashboard')]);setDrivers(d);setStats(st)}
   if(user.role==='driver'){const a=await api<any[]>('/assignments');if(a.length&&!selectedSchedule)setSelectedSchedule(a[0].schedule_id)}
  }catch(e:any){setError(e.message)}},[user,selectedSchedule]);
+ useEffect(()=>{(async()=>{await loadToken();try{const me=await api<User>('/me');setUser(me);setProfileName(me.name);setPhone(me.phone||'')}catch{}setBoot(false)})()},[]);
+ useEffect(()=>{if(!user)return;refresh();const t=setInterval(refresh,7000);return()=>clearInterval(t)},[user,refresh]);
+ useEffect(()=>{if(!user||chatTarget===null)return;let active=true;const loadMessages=async()=>{try{const rows=await api<any[]>(`/messages/${chatTarget}`);if(active)setChat(rows)}catch{}};loadMessages();const timer=setInterval(loadMessages,3000);return()=>{active=false;clearInterval(timer)}},[user,chatTarget]);
 }
