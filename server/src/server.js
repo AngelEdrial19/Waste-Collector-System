@@ -47,3 +47,10 @@ app.post('/api/auth/login',(req,res)=>{
  const token=jwt.sign({id:u.id,role:u.role,name:u.name},SECRET,{expiresIn:'7d'});
  res.json({token,user:safe(u)});
 });
+app.get('/api/me',auth,(req,res)=>res.json(safe(db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id))));
+app.patch('/api/me',auth,(req,res)=>{
+ const {name,phone,available}=req.body;
+ db.prepare('UPDATE users SET name=COALESCE(?,name),phone=COALESCE(?,phone),available=COALESCE(?,available) WHERE id=?')
+ .run(name??null,phone??null,available===undefined?null:(available?1:0),req.user.id);
+ res.json(safe(db.prepare('SELECT * FROM users WHERE id=?').get(req.user.id)));
+});
