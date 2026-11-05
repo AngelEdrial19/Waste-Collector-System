@@ -22,3 +22,6 @@ export class ApiClient {
     return data.photoUrl as string;
   }
 }
+const client=new ApiClient();
+export const api=<T=any>(path:string,method='GET',body?:any)=>client.request<T>(path,method,body);
+export const uploadPhoto=(uri:string)=>client.uploadHousePhoto(uri);
