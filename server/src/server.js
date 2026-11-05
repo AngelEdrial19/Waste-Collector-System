@@ -137,3 +137,12 @@ app.post('/api/messages',auth,role('admin','driver'),(req,res)=>{
  notify(receiverId,'New message',`${req.user.name}: ${message.trim().slice(0,90)}`,'chat');
  res.status(201).json(db.prepare('SELECT * FROM messages WHERE id=?').get(x.lastInsertRowid));
 });
+app.get('/api/dashboard',auth,role('admin'),(req,res)=>{
+ res.json({drivers:db.prepare("SELECT COUNT(*) n FROM users WHERE role='driver'").get().n,
+ availableDrivers:db.prepare("SELECT COUNT(*) n FROM users WHERE role='driver' AND available=1").get().n,
+ households:db.prepare('SELECT COUNT(*) n FROM households').get().n,
+ schedules:db.prepare('SELECT COUNT(*) n FROM schedules').get().n,
+ pickups:db.prepare("SELECT COUNT(*) n FROM pickups WHERE status='picked_up'").get().n,
+ missed:db.prepare("SELECT COUNT(*) n FROM pickups WHERE status='not_picked_up'").get().n});
+});
+app.listen(PORT,'0.0.0.0',()=>console.log(`Waste Collector API running on http://localhost:${PORT}`));
