@@ -96,3 +96,11 @@ app.post('/api/assignments/:scheduleId/accept',auth,role('driver'),(req,res)=>{
  notify(db.prepare("SELECT id FROM users WHERE role='admin'").get().id,'Driver accepted schedule',`${req.user.name} accepted a collection assignment.`,'assignment');
  res.json({ok:true,status:'accepted'});
 });
+app.post('/api/assignments/:scheduleId/start',auth,role('driver'),(req,res)=>{
+ db.prepare("UPDATE assignments SET status='in_progress',started_at=CURRENT_TIMESTAMP WHERE schedule_id=? AND driver_id=?").run(req.params.scheduleId,req.user.id);
+ res.json({ok:true,status:'in_progress'});
+});
+app.get('/api/assignments',auth,role('admin','driver'),(req,res)=>{
+ const q=`SELECT a.*,s.title,s.area,s.collection_date,s.start_time,u.name AS driver_name FROM assignments a JOIN schedules s ON s.id=a.schedule_id JOIN users u ON u.id=a.driver_id ${req.user.role==='driver'?'WHERE a.driver_id=?':''} ORDER BY a.id DESC`;
+ res.json(req.user.role==='driver'?db.prepare(q).all(req.user.id):db.prepare(q).all());
+});
