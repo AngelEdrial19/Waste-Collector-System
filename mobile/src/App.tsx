@@ -14,3 +14,6 @@ import HouseholdMapPicker from './src/components/HouseholdMapPicker';
 import {C} from './src/theme';
 import type {User,Schedule,Household,Notice} from './src/types';
 
+export default function App(){
+    const [user,setUser]=useState<User|null>(null),[boot,setBoot]=useState(true),[tab,setTab]=useState('Home'),[busy,setBusy]=useState(false),[error,setError]=useState('');
+}
