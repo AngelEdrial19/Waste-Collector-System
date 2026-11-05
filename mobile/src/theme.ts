@@ -1,0 +1,1 @@
+export const C={forest:'#123D32',forest2:'#1B5948',mint:'#B9E8D1',mintLight:'#EAF8F0',bg:'#F4F8F5',white:'#FFFFFF',ink:'#17352C',muted:'#71847B',line:'#DCE9E1',red:'#D94B4B',green:'#25845D',amber:'#D99A35'};
