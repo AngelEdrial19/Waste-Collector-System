@@ -78,4 +78,14 @@ export default function App(){
   if(!title.trim()||!area.trim()||!date.trim()||!time.trim())throw new Error('Complete all required schedule fields.');
   await api(`/schedules/${id}`,'PUT',{title,area,collectionDate:date,startTime:time,notes,status:'published'});
  },'Schedule updated.');
+ const accept=(id:number)=>run(async()=>{await api(`/assignments/${id}/accept`,'POST');setSelectedSchedule(id)},'Schedule accepted.');
+ const startRoute=(id:number)=>run(()=>api(`/assignments/${id}/start`,'POST'),'Route started.');
+ const pickup=(h:Household,status:'picked_up'|'not_picked_up')=>run(async()=>{if(!selectedSchedule)throw new Error('Accept a schedule first.');await api('/pickups','POST',{scheduleId:selectedSchedule,householdId:h.id,status})},status==='picked_up'?'Pickup recorded. Resident notified.':'Missed pickup recorded. Resident notified.');
+ const chooseHousePhoto=async(source:'camera'|'gallery')=>{try{const uri=source==='camera'?await PhotoService.takePhoto():await PhotoService.chooseFromGallery();if(uri)setPhotoUri(uri)}catch(e:any){Alert.alert('Photo',e.message)}};
+ const saveHousehold=()=>run(async()=>{
+  if(!hhName.trim()||!address.trim())throw new Error('Household name and complete address are required.');
+  if(!FormValidator.coordinates(lat,lng))throw new Error('Please choose a valid map location.');
+  const photoUrl=photoUri?await uploadPhoto(photoUri):photo;
+  await api('/households','POST',{householdName:hhName||user?.name+' Household',address,latitude:Number(lat),longitude:Number(lng),photoUrl});
+ },'Household and map pin saved.');
 }
