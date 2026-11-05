@@ -88,4 +88,7 @@ export default function App(){
   const photoUrl=photoUri?await uploadPhoto(photoUri):photo;
   await api('/households','POST',{householdName:hhName||user?.name+' Household',address,latitude:Number(lat),longitude:Number(lng),photoUrl});
  },'Household and map pin saved.');
+ const saveProfile=()=>run(async()=>{const u=await api<User>('/me','PATCH',{name:profileName,phone});setUser(u)},'Profile updated.');
+ const openChat=async(id:number)=>{setChatTarget(id);try{setChat(await api<any[]>(`/messages/${id}`))}catch(e:any){Alert.alert('Chat',e.message)}};
+ const sendChat=()=>{if(chatTarget===null||!chatText.trim())return;run(async()=>{await api('/messages','POST',{receiverId:chatTarget,message:chatText});setChatText('');setChat(await api<any[]>(`/messages/${chatTarget}`))})};
 }
