@@ -65,4 +65,17 @@ export default function App(){
    Alert.alert('Account created','Your resident account and household map location have been registered.');
   }catch(e:any){setError(e.message)}finally{setBusy(false)}
  };
+ const chooseRegPhoto=async(source:'camera'|'gallery')=>{try{const uri=source==='camera'?await PhotoService.takePhoto():await PhotoService.chooseFromGallery();if(uri)setRegPhotoUri(uri)}catch(e:any){Alert.alert('Photo',e.message)}};
+ const logout=async()=>{await setToken(null);setUser(null);setTab('Home')};
+ const publish=()=>run(async()=>{
+  if(!title.trim()||!area.trim()||!date.trim()||!time.trim())throw new Error('Please complete the schedule title, area, date and time.');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw new Error('Use date format YYYY-MM-DD.');
+  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw new Error('Use time format HH:MM (24-hour).');
+  await api('/schedules','POST',{title,area,collectionDate:date,startTime:time,notes});setTitle('');setNotes('')
+ },'Schedule published. Drivers and residents have been notified.');
+ const editSchedule=(x:Schedule)=>{setTitle(x.title);setArea(x.area);setDate(x.collection_date);setTime(x.start_time);setNotes(x.notes);Alert.alert('Edit schedule','The schedule details are loaded into the form. Change them, then tap Save Changes.')};
+ const saveEdit=(id:number)=>run(async()=>{
+  if(!title.trim()||!area.trim()||!date.trim()||!time.trim())throw new Error('Complete all required schedule fields.');
+  await api(`/schedules/${id}`,'PUT',{title,area,collectionDate:date,startTime:time,notes,status:'published'});
+ },'Schedule updated.');
 }
