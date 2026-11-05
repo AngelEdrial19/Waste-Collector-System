@@ -128,3 +128,12 @@ app.get('/api/messages/:userId',auth,role('admin','driver'),(req,res)=>{
  if(!peer||!((req.user.role==='admin'&&peer.role==='driver')||(req.user.role==='driver'&&peer.role==='admin')))return res.status(403).json({error:'Chat is limited to municipal admin and official drivers.'});
  res.json(db.prepare('SELECT m.*,s.name AS sender_name FROM messages m JOIN users s ON s.id=m.sender_id WHERE (sender_id=? AND receiver_id=?) OR (sender_id=? AND receiver_id=?) ORDER BY m.id').all(req.user.id,other,other,req.user.id));
 });
+app.post('/api/messages',auth,role('admin','driver'),(req,res)=>{
+ const {receiverId,message}=req.body;
+ const peer=db.prepare('SELECT id,role FROM users WHERE id=?').get(Number(receiverId));
+ if(!peer||!((req.user.role==='admin'&&peer.role==='driver')||(req.user.role==='driver'&&peer.role==='admin')))return res.status(403).json({error:'Chat is limited to municipal admin and official drivers.'});
+ if(!message?.trim())return res.status(400).json({error:'Message is required.'});
+ const x=db.prepare('INSERT INTO messages(sender_id,receiver_id,message) VALUES(?,?,?)').run(req.user.id,receiverId,message.trim());
+ notify(receiverId,'New message',`${req.user.name}: ${message.trim().slice(0,90)}`,'chat');
+ res.status(201).json(db.prepare('SELECT * FROM messages WHERE id=?').get(x.lastInsertRowid));
+});
