@@ -26,4 +26,9 @@ export default function App(){
  const [hhName,setHhName]=useState(''),[address,setAddress]=useState(''),[lat,setLat]=useState('10.2838'),[lng,setLng]=useState('125.1832'),[photo,setPhoto]=useState(''),[photoUri,setPhotoUri]=useState('');
  const [chatText,setChatText]=useState(''),[chat,setChat]=useState<any[]>([]),[chatTarget,setChatTarget]=useState<number|null>(null);
  const [profileName,setProfileName]=useState(''),[phone,setPhone]=useState(''),[selectedSchedule,setSelectedSchedule]=useState<number|null>(null);
+ const refresh=useCallback(async()=>{if(!user)return;try{
+  const [sc,hh,no]=await Promise.all([api<Schedule[]>('/schedules'),api<Household[]>('/households'),api<Notice[]>('/notifications')]);setSchedules(sc);setHouseholds(hh);setNotices(no);
+  if(user.role==='admin'){const [d,st]=await Promise.all([api<any[]>('/drivers'),api<any>('/dashboard')]);setDrivers(d);setStats(st)}
+  if(user.role==='driver'){const a=await api<any[]>('/assignments');if(a.length&&!selectedSchedule)setSelectedSchedule(a[0].schedule_id)}
+ }catch(e:any){setError(e.message)}},[user,selectedSchedule]);
 }
